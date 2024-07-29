@@ -1,20 +1,77 @@
 {
-  "Id": "[Id]",
+  "Id": "9575a1fc-d81b-4947-bcce-bd075f118f3e",
   "TriggerKeywords": [
-    "[Trigger Keyword]"
+    "rss"
   ],
-  "Name": "[Name]",
-  "Description": "[Description]",
-  "Author": "[Author Name]",
+  "Name": "RSS Reader",
+  "Description": "Read RSS feeds",
+  "Author": "qianlifeng",
   "Version": "0.0.1",
   "MinWoxVersion": "2.0.0",
   "Runtime": "nodejs",
-  "Website": "[Website]",
+  "Website": "https://github.com/qianlifeng/Wox.Plugin.RSSReader",
   "Entry": "index.js",
   "Icon": "relative:images/app.png",
   "SupportedOS": [
     "windows",
     "linux",
     "darwin"
+  ],
+  "SettingDefinitions": [
+    {
+      "Type": "select",
+      "Value": {
+        "Key": "primaryAction",
+        "Label": "Primary Action",
+        "DefaultValue": "open",
+        "Options": [
+          {
+            "Label": "Open in browser",
+            "Value": "open"
+          },
+          {
+            "Label": "Mark as read",
+            "Value": "mark"
+          }
+        ]
+      }
+    },
+    {
+      "Type": "table",
+      "Value": {
+        "Key": "feeds",
+        "Title": "RSS Feeds",
+        "Columns": [
+          {
+            "Key": "title",
+            "Label": "Title",
+            "Tooltip": "Feed title",
+            "Width": 100,
+            "Type": "text"
+          },
+          {
+            "Key": "url",
+            "Label": "URL",
+            "Tooltip": "RSS feed URL",
+            "Width": 100,
+            "Type": "text"
+          },
+          {
+            "Key": "refreshInterval",
+            "Label": "Interval",
+            "Tooltip": "Refresh interval in minutes",
+            "Width": 60,
+            "Type": "text"
+          },
+          {
+            "Key": "maxItems",
+            "Label": "Max Items",
+            "Tooltip": "Maximum number of items to display",
+            "Width": 100,
+            "Type": "text"
+          }
+        ]
+      }
+    }
   ]
 }

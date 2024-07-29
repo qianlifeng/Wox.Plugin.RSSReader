@@ -1,3 +1,3 @@
-# Wox.Plugin.Template.Nodejs
+# Wox.Plugin.RSSReader
 
-Plugin template for nodejs plugin
+RSS Reader plugin for Wox
