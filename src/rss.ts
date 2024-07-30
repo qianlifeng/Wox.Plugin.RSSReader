@@ -19,7 +19,6 @@ export interface FeedItem {
   link: string // should be unique, will be used to check if the item is already in the list
   title: string
   date: string
-  summary: string
   isRead: boolean
 }
 
@@ -30,14 +29,13 @@ export interface FeedItemX extends FeedItem {
 async function parseFeed(ctx: Context, feedUrl: string): Promise<FeedItem[]> {
   let parser = new Parser()
   let feed = await parser.parseURL(feedUrl)
-  await api.Log(ctx, "Info", `parsed feed: ${feed.items.length} items`)
+  await api.Log(ctx, "Info", `parsed feed: ${feed.title}, items: ${feed.items.length}`)
   return feed.items.map((item) => {
     return {
       feedUrl: feedUrl,
       title: item.title || "",
       link: item.link || "",
       date: item.pubDate || "",
-      summary: item.contentSnippet || "",
       isRead: false
     }
   })
@@ -91,9 +89,15 @@ function startSchedule() {
 async function syncFeeds(ctx: Context, feed: Feed) {
   await api.Log(ctx, "Info", `start sync feed: ${feed.title}`)
   let allItemsInFeed = feedItems.filter(item => item.feedUrl === feed.url)
-  let newItems = (await parseFeed(ctx, feed.url)).filter((item) => {
+  let latestFeedItems = await parseFeed(ctx, feed.url)
+  let newItems = latestFeedItems.filter((item) => {
     return !allItemsInFeed.some((existingItem) => existingItem.link === item.link)
   })
+  if (newItems.length === 0) {
+    await api.Log(ctx, "Info", `no new items in feed: ${feed.title}`)
+    return
+  }
+
   // concat new items to existing items and sort by date desc, then keep the top N items
   allItemsInFeed = allItemsInFeed.concat(newItems).sort((a, b) => {
     return new Date(b.date).getTime() - new Date(a.date).getTime()
@@ -102,8 +106,19 @@ async function syncFeeds(ctx: Context, feed: Feed) {
   feedItems = feedItems.sort((a, b) => {
     return new Date(b.date).getTime() - new Date(a.date).getTime()
   })
-  await api.SaveSetting(ctx, feedItemMapKey, JSON.stringify(feedItems), false)
+  await saveFeedItems(ctx)
   await api.Log(ctx, "Info", `finish sync feed: ${feed.title}, total items: ${allItemsInFeed.length}`)
+}
+
+async function saveFeedItems(ctx: Context) {
+  //remove duplicate feed items
+  let feedItemsMap: Map<string, FeedItem> = new Map()
+  feedItems.forEach((item) => {
+    feedItemsMap.set(item.link, item)
+  })
+  feedItems = Array.from(feedItemsMap.values())
+
+  await api.SaveSetting(ctx, feedItemMapKey, JSON.stringify(feedItems), false)
 }
 
 function getFeedItems(): FeedItemX[] {
@@ -118,15 +133,37 @@ function getFeedItems(): FeedItemX[] {
       }
     }
   )
+
+  // sort by date desc
+  allItems.sort((a, b) => {
+    return new Date(b.date).getTime() - new Date(a.date).getTime()
+  })
   return allItems
 }
 
 async function markAsRead(ctx: Context, link: string) {
+  await api.Log(ctx, "Info", `making item as read: ${link}`)
   let item = feedItems.find((item) => item.link === link)
   if (item) {
+    if (item.isRead) {
+      return
+    }
+
     item.isRead = true
-    await api.SaveSetting(ctx, feedItemMapKey, JSON.stringify(feedItems), false)
+    await saveFeedItems(ctx)
+  } else {
+    await api.Log(ctx, "Error", `failed to mark item as read, item not found: ${link}`)
   }
 }
 
-export { parseFeed, updateFeeds, start, getFeedItems, markAsRead }
+async function stop(ctx: Context) {
+  // clear all schedules
+  feedIntervals.forEach((interval) => {
+    clearInterval(interval)
+  })
+  feedIntervals.clear()
+  await api.Log(ctx, "Info", "stopped")
+  await api.Log(ctx, "Info", `-----------------------`)
+}
+
+export { parseFeed, updateFeeds, start, getFeedItems, markAsRead, stop }

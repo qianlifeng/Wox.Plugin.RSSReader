@@ -9,7 +9,7 @@ import {
   Result,
   WoxImage
 } from "@wox-launcher/wox-plugin"
-import { Feed, getFeedItems, markAsRead, start } from "./rss"
+import { Feed, getFeedItems, markAsRead, start, stop } from "./rss"
 import open from "open"
 import dayjs from "dayjs"
 
@@ -39,15 +39,15 @@ export const plugin: Plugin = {
         primaryAction = value
       }
     })
+
+    await api.OnUnload(ctx, async () => {
+      await api.Log(ctx, "Info", "start unloading plugin")
+      await stop(ctx)
+    })
   },
 
   query: async (ctx: Context, query: Query): Promise<Result[]> => {
     let items = getFeedItems()
-    // sort by date desc
-    items.sort((a, b) => {
-      return new Date(b.date).getTime() - new Date(a.date).getTime()
-    })
-
     items = items.filter((item) => {
       if (query.Search === "") {
         return true
@@ -60,13 +60,16 @@ export const plugin: Plugin = {
     const totalReadCount = items.filter((item) => item.isRead).length
 
     return items.map((item) => {
+      //get base domain url from link
+      const url = new URL(item.link)
+      const domain = `${url.protocol}//${url.hostname}`
       return {
         Title: item.title,
         SubTitle: dayjs(item.date).format("YYYY-MM-DD HH:mm:ss"),
         Score: dayjs(item.date).unix(),
         Icon: {
-          ImageType: "relative",
-          ImageData: "images/app.png"
+          ImageType: "url",
+          ImageData: `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${domain}&size=32`
         } as WoxImage,
         Group: item.isRead ? `Read (${totalReadCount})` : `Unread (${totalUnreadCount})`,
         GroupScore: item.isRead ? 0 : 10,
@@ -80,10 +83,10 @@ export const plugin: Plugin = {
           {
             Name: "Open",
             IsDefault: primaryAction === "open",
-            Action: (actionContext: ActionContext) => {
-              open(item.link)
-              markAsRead(NewContext(), item.link)
-              api.ChangeQuery(ctx, {
+            Action: async (actionContext: ActionContext) => {
+              await open(item.link)
+              await markAsRead(NewContext(), item.link)
+              await api.ChangeQuery(ctx, {
                 QueryType: "input",
                 QueryText: query.RawQuery
               })
@@ -93,9 +96,9 @@ export const plugin: Plugin = {
             Name: "Mark as Read",
             IsDefault: primaryAction === "mark",
             PreventHideAfterAction: true,
-            Action: (actionContext: ActionContext) => {
-              markAsRead(NewContext(), item.link)
-              api.ChangeQuery(ctx, {
+            Action: async (actionContext: ActionContext) => {
+              await markAsRead(NewContext(), item.link)
+              await api.ChangeQuery(ctx, {
                 QueryType: "input",
                 QueryText: query.RawQuery
               })
