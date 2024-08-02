@@ -27,15 +27,28 @@ export interface FeedItemX extends FeedItem {
 }
 
 async function parseFeed(ctx: Context, feedUrl: string): Promise<FeedItem[]> {
-  let parser = new Parser()
-  let feed = await parser.parseURL(feedUrl)
+  let parser = new Parser({ timeout: 5000 })
+  let feed = await parser.parseURL(feedUrl).catch((e) => {
+    api.Log(ctx, "Error", `failed to parse feed: ${feedUrl}, error: ${e}`)
+    return { title: "", items: [] }
+  })
+  if (feed.items.length == 0) {
+    return []
+  }
+
   await api.Log(ctx, "Info", `parsed feed: ${feed.title}, items: ${feed.items.length}`)
   return feed.items.map((item) => {
+    let feedDate = item.pubDate || ""
+    //check if date is valid
+    if (feedDate === "" || isNaN(new Date(feedDate).getTime())) {
+      feedDate = new Date().toISOString()
+    }
+
     return {
       feedUrl: feedUrl,
       title: item.title || "",
       link: item.link || "",
-      date: item.pubDate || "",
+      date: feedDate,
       isRead: false
     }
   })
