@@ -83,6 +83,7 @@ export const plugin: Plugin = {
           {
             Name: "Open",
             IsDefault: primaryAction === "open",
+            Hotkey: primaryAction === "open" ? "Enter" : "Cmd+Enter",
             Action: async (actionContext: ActionContext) => {
               await open(item.link)
               await markAsRead(NewContext(), item.link)
@@ -95,6 +96,7 @@ export const plugin: Plugin = {
           {
             Name: "Mark as Read",
             IsDefault: primaryAction === "mark",
+            Hotkey: primaryAction === "mark" ? "Enter" : "Cmd+Enter",
             PreventHideAfterAction: true,
             Action: async (actionContext: ActionContext) => {
               await markAsRead(NewContext(), item.link)

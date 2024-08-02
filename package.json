@@ -27,7 +27,7 @@
     "typescript": "^5.5.3"
   },
   "dependencies": {
-    "@wox-launcher/wox-plugin": "^0.0.77",
+    "@wox-launcher/wox-plugin": "^0.0.79",
     "dayjs": "^1.11.12",
     "open": "^10.1.0",
     "rss-parser": "^3.13.0"

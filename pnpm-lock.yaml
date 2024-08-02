@@ -6,8 +6,8 @@ settings:
 
 dependencies:
   '@wox-launcher/wox-plugin':
-    specifier: ^0.0.77
-    version: 0.0.77
+    specifier: ^0.0.79
+    version: 0.0.79
   dayjs:
     specifier: ^1.11.12
     version: 1.11.12
@@ -2091,8 +2091,8 @@ packages:
     hasBin: true
     dev: true
 
-  /@wox-launcher/wox-plugin@0.0.77:
-    resolution: {integrity: sha512-UEehmH5Q2x4YbgIBfqFPvUKcvoj+61Vc8UHT5Im8aJCidUE51JE5sdp2w0vcyarbhgkGKgynI0hzz4rY2GNebw==}
+  /@wox-launcher/wox-plugin@0.0.79:
+    resolution: {integrity: sha512-P7elHcHGBQZgNHKeqPdOfabb0WGWoyalesSxB0AU+IFsGVaSS5k2fCH6FGhELFto/yZeSFxLy8HepI7qGrnQ0w==}
     dev: false
 
   /acorn-jsx@5.3.2(acorn@8.12.1):
