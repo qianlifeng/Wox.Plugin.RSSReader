@@ -53,7 +53,7 @@ export const plugin: Plugin = {
         return true
       }
 
-      return item.title.includes(query.Search)
+      return item.title.toLowerCase().includes(query.Search.toLowerCase())
     })
 
     const totalUnreadCount = items.filter((item) => !item.isRead).length

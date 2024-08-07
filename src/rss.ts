@@ -11,7 +11,7 @@ export interface Feed {
   title: string
   url: string
   refreshInterval: number // in minutes
-  maxItems: number // max number of items to keep
+  maxItems: number // max number of items to display
 }
 
 export interface FeedItem {
@@ -114,16 +114,12 @@ async function syncFeeds(ctx: Context, feed: Feed) {
   // concat new items to existing items and sort by date desc, then keep the top N items
   allItemsInFeed = allItemsInFeed.concat(newItems).sort((a, b) => {
     return new Date(b.date).getTime() - new Date(a.date).getTime()
-  }).slice(0, feed.maxItems)
+  }).slice(0, 100)
   feedItems = feedItems.filter(item => item.feedUrl !== feed.url).concat(allItemsInFeed)
   feedItems = feedItems.sort((a, b) => {
     return new Date(b.date).getTime() - new Date(a.date).getTime()
   })
-  await saveFeedItems(ctx)
-  await api.Log(ctx, "Info", `finish sync feed: ${feed.title}, total items: ${allItemsInFeed.length}`)
-}
 
-async function saveFeedItems(ctx: Context) {
   //remove duplicate feed items
   let feedItemsMap: Map<string, FeedItem> = new Map()
   feedItems.forEach((item) => {
@@ -131,14 +127,28 @@ async function saveFeedItems(ctx: Context) {
   })
   feedItems = Array.from(feedItemsMap.values())
 
+  await saveFeedItems(ctx)
+  await api.Log(ctx, "Info", `finish sync feed: ${feed.title}, total items: ${allItemsInFeed.length}`)
+}
+
+async function saveFeedItems(ctx: Context) {
   await api.SaveSetting(ctx, feedItemMapKey, JSON.stringify(feedItems), false)
 }
 
 function getFeedItems(): FeedItemX[] {
   let allItems: FeedItemX[] = []
+  let feedCount = new Map<string, number>()
   feedItems.forEach((item) => {
       let feed = feeds.find((f) => f.url === item.feedUrl)
       if (feed) {
+        let count = feedCount.get(feed.url) ?? 0
+        feedCount.set(feed.url, count + 1)
+
+        let currentFeedCount = feedCount.get(feed.url) ?? 0
+        if (currentFeedCount > feed.maxItems) {
+          return
+        }
+
         allItems.push({
           ...item,
           feed: feed
