@@ -179,6 +179,45 @@ async function markAsRead(ctx: Context, link: string) {
   }
 }
 
+async function markAllAsReadInFeed(ctx: Context, feedUrl: string) {
+  await api.Log(ctx, "Info", `marking all items as read in feed: ${feedUrl}`)
+  let itemsInFeed = feedItems.filter((item) => item.feedUrl === feedUrl)
+  let unreadCount = 0
+
+  itemsInFeed.forEach((item) => {
+    if (!item.isRead) {
+      item.isRead = true
+      unreadCount++
+    }
+  })
+
+  if (unreadCount > 0) {
+    await saveFeedItems(ctx)
+    await api.Log(ctx, "Info", `marked ${unreadCount} items as read in feed: ${feedUrl}`)
+  } else {
+    await api.Log(ctx, "Info", `no unread items in feed: ${feedUrl}`)
+  }
+}
+
+async function markAllAsRead(ctx: Context) {
+  await api.Log(ctx, "Info", `marking all items as read`)
+  let unreadCount = 0
+
+  feedItems.forEach((item) => {
+    if (!item.isRead) {
+      item.isRead = true
+      unreadCount++
+    }
+  })
+
+  if (unreadCount > 0) {
+    await saveFeedItems(ctx)
+    await api.Log(ctx, "Info", `marked ${unreadCount} items as read`)
+  } else {
+    await api.Log(ctx, "Info", `no unread items`)
+  }
+}
+
 async function stop(ctx: Context) {
   // clear all schedules
   feedIntervals.forEach((interval) => {
@@ -189,4 +228,4 @@ async function stop(ctx: Context) {
   await api.Log(ctx, "Info", `-----------------------`)
 }
 
-export { parseFeed, updateFeeds, start, getFeedItems, markAsRead, stop }
+export { parseFeed, updateFeeds, start, getFeedItems, markAsRead, markAllAsReadInFeed, markAllAsRead, stop }

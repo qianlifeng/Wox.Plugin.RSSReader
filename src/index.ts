@@ -9,7 +9,7 @@ import {
   Result,
   WoxImage
 } from "@wox-launcher/wox-plugin"
-import { Feed, getFeedItems, markAsRead, start, stop } from "./rss"
+import { Feed, getFeedItems, markAsRead, markAllAsReadInFeed, markAllAsRead, start, stop } from "./rss"
 import open from "open"
 import dayjs from "dayjs"
 
@@ -94,12 +94,34 @@ export const plugin: Plugin = {
             }
           },
           {
-            Name: "Mark as Read",
+            Name: "Mark as read",
             IsDefault: primaryAction === "mark",
             Hotkey: primaryAction === "mark" ? "Enter" : "Cmd+Enter",
             PreventHideAfterAction: true,
             Action: async (actionContext: ActionContext) => {
               await markAsRead(NewContext(), item.link)
+              await api.ChangeQuery(ctx, {
+                QueryType: "input",
+                QueryText: query.RawQuery
+              })
+            }
+          },
+          {
+            Name: `Mark all in ${item.feed.title} as read`,
+            PreventHideAfterAction: true,
+            Action: async () => {
+              await markAllAsReadInFeed(NewContext(), item.feed.url)
+              await api.ChangeQuery(ctx, {
+                QueryType: "input",
+                QueryText: query.RawQuery
+              })
+            }
+          },
+          {
+            Name: "Mark all as read",
+            PreventHideAfterAction: true,
+            Action: async () => {
+              await markAllAsRead(NewContext())
               await api.ChangeQuery(ctx, {
                 QueryType: "input",
                 QueryText: query.RawQuery
